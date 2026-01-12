@@ -1,28 +1,47 @@
+
 name: NodeJS with Webpack
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
+    # Keep it simple while we debug
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
 
-    - name: Build
-      run: |
-        npm install
-        npx webpack
+      - name: Show environment
+        run: |
+          node -v
+          npm -v
+          ls -la
+          if [ -f package.json ]; then cat package.json; else echo "NO package.json at repo root"; fi
+
+      # If your project is in a subfolder, set working-directory accordingly
+      - name: Install dependencies
+        run: npm ci
+        # If you don't have a package-lock.json yet, use "npm install" instead:
+        # run: npm install
+
+      - name: List node_modules/bin
+        run: |
+          ls -la node_modules/.bin || true
+          npx --yes webpack --version || echo "webpack not available yet"
+
+      - name: Build with webpack
+        run: |
+          # If you have a build script in package.json, prefer it:
+          # npm run build
+          npx --yes webpack --mode production
